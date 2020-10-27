@@ -180,7 +180,9 @@ else
 			public = false,
 			started = false
 		}
+		local mod = mem.modules[ game.type ]
 		mem.games[code] = game
+		mod.games[#mod.games + 1] = code
 		mem.users[discord.authorId] = {
 			ready = true,
 			game = code
@@ -188,7 +190,7 @@ else
 
 		discord.reply({embed = {
 			title = "Game created",
-			description = "You've created a " .. mem.modules[ game.type ].name .. " game. Code: `" .. code .. "`."
+			description = "You've created a " .. mod.name .. " game. Code: `" .. code .. "`."
 		}})
 
 	else
