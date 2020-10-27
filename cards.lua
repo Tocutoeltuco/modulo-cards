@@ -29,7 +29,7 @@ if not CARDS_MEMORY_TABLE or CARDS_MEMORY_TABLE.version ~= memory_version then
 	}
 end
 
-local REPO_LINK = "https://raw.githubusercontent.com/Tocutoeltuco/modulo-cards/master/"
+local REPO_LINK = "https://raw.githubusercontent.com/Tocutoeltuco/modulo-cards/" .. LATEST_MODULO_CARDS_COMMIT .. "/"
 local mem = CARDS_MEMORY_TABLE
 local function load(script)
 	local head, body = discord.http(REPO_LINK .. "api.lua")

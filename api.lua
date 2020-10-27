@@ -13,7 +13,7 @@ local function split_text(text, split_at, on_linebreak)
 		end
 
 		if #text - index > 0 then
-			slices[#slices + 1] = text, index)
+			slices[#slices + 1] = string.sub(text, index)
 		end
 	else
 		for index = 1, #text, split_at do
