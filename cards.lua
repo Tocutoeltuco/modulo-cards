@@ -33,7 +33,11 @@ local REPO_LINK = "https://raw.githubusercontent.com/Tocutoeltuco/modulo-cards/m
 local mem = CARDS_MEMORY_TABLE
 local function load(script)
 	local head, body = discord.http(REPO_LINK .. "api.lua")
-	return discord.load(body)()
+	local fnc, err = discord.load(body)
+	if err then
+		error("Syntax error in " .. script .. ": " .. err, 2)
+	end
+	return fnc()
 end
 local api = load("api.lua")
 
