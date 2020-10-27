@@ -99,6 +99,7 @@ if mem.users[ discord.authorId ] then
 
 	if game.started then
 		local script = load(mod.script)
+		printt(script)
 		script.initialChecks(user, game, mem, api.decks[mod.deck])
 		script.command()
 
