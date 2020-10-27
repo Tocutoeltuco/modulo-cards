@@ -99,7 +99,7 @@ if mem.users[ discord.authorId ] then
 
 	if game.started then
 		local script = load(mod.script)
-		script.initialChecks(user, game, mem)
+		script.initialChecks(user, game, mem, api.decks[mod.deck])
 		script.command()
 
 	else
@@ -165,7 +165,21 @@ if mem.users[ discord.authorId ] then
 			end
 
 		elseif is_host then
-			if cmd == "accept" or cmd == "deny" then
+			if cmd == "start" then
+				local start_msg = {embed = {
+					title = "Starting game",
+					description = "The game is starting."
+				}}
+				for index = 1, #game.players do
+					discord.sendPrivateMessage(start_msg, game.players[index])
+				end
+
+				game.started = true
+				local script = load(mod.script)
+				script.initialChecks(user, game, mem, api.decks[mod.deck])
+				script.start()
+
+			elseif cmd == "accept" or cmd == "deny" then
 				if #game.waiting == 0 then
 					discord.reply({embed = {
 						title = "Error!",
@@ -183,6 +197,7 @@ if mem.users[ discord.authorId ] then
 					mem.users[waiter].ready = true
 					game.players[players] = waiter
 
+					local player_list = {}
 					local new_player = {embed = {
 						title = "New player",
 						description = string.format(
@@ -191,15 +206,20 @@ if mem.users[ discord.authorId ] then
 							players, mod.maxplayers
 						)
 					}}
+					local player
 					for index = 1, players - 1 do
-						discord.sendPrivateMessage(new_player, game.players[index])
+						player = game.players[index]
+
+						discord.sendPrivateMessage(new_player, player)
+						player_list[index] = "**" .. discord.getMemberName(player) .. "** <@" .. player .. ">"
 					end
 
 					discord.sendPrivateMessage({embed = {
 						title = "Joined game",
 						description = string.format(
-							"You've joined the game `%s`.",
-							game.code
+							"You've joined the game `%s`. Players:\n- %s",
+							game.code,
+							table.concat(player_list, "\n- ")
 						)
 					}}, waiter)
 
@@ -243,6 +263,14 @@ if mem.users[ discord.authorId ] then
 						)
 					}}, waiter)
 
+					discord.sendPrivateMessage({embed = {
+						title = "Rejection",
+						description = string.format(
+							"You've rejected **%s** (<@%s>).",
+							discord.getMemberName(waiter), waiter
+						)
+					}})
+
 					if #game.waiting > 0 then
 						waiter = game.waiting[1]
 						discord.sendPrivateMessage({embed = {
@@ -251,14 +279,6 @@ if mem.users[ discord.authorId ] then
 								"**%s** (<@%s>) wants to join your %s game. Type **!cards accept** or **!cards deny**.",
 								discord.getMemberName(waiter), waiter,
 								mod.name
-							)
-						}})
-					else
-						discord.sendPrivateMessage({embed = {
-							title = "Rejection",
-							description = string.format(
-								"You've rejected **%s** (<@%s>).",
-								discord.getMemberName(waiter), waiter
 							)
 						}})
 					end
