@@ -244,12 +244,21 @@ if mem.users[ discord.authorId ] then
 					}}, waiter)
 
 					if #game.waiting > 0 then
+						waiter = game.waiting[1]
 						discord.sendPrivateMessage({embed = {
 							title = "Join request",
 							description = string.format(
 								"**%s** (<@%s>) wants to join your %s game. Type **!cards accept** or **!cards deny**.",
 								discord.getMemberName(waiter), waiter,
 								mod.name
+							)
+						}})
+					else
+						discord.sendPrivateMessage({embed = {
+							title = "Rejection",
+							description = string.format(
+								"You've rejected **%s** (<@%s>).",
+								discord.getMemberName(waiter), waiter
 							)
 						}})
 					end
