@@ -9,13 +9,13 @@ end
 local function pickRandomCard()
 	local index
 	repeat
-		index = math.random(#deck)
+		index = math.random(#deck.cards)
 	until not game.blackjack.usedCards[index]
 
 	discord.reply("used card " .. index)
 
 	game.blackjack.usedCards[index] = true
-	return deck[index]
+	return deck.cards[index]
 end
 
 local function newDeck(cards)
