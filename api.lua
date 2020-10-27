@@ -24,6 +24,19 @@ local function split_text(text, split_at, on_linebreak)
 	return slices
 end
 
+local function get_command(text)
+	local cmd, args, pointer = "", {}, -1
+
+	for slice in string.gmatch(text, "%S+") do
+		pointer = pointer + 1
+		if pointer == 0 then
+			cmd = string.lower(slice)
+		else
+			args[pointer] = slice
+		end
+	end
+end
+
 do
 	local reply = discord.reply
 	function discord.reply(content)
@@ -62,6 +75,8 @@ end
 
 return {
 	split_text = split_text,
+	get_command = get_command,
+
 	decks = {
 		["standard-english"] = {
 			name = "Standard 52-Card English Deck",
