@@ -12,40 +12,42 @@ local function pickRandomCard()
 		index = math.random(#deck)
 	until not game.blackjack.usedCards[index]
 
+	discord.reply("used card " .. index)
+
 	game.blackjack.usedCards[index] = true
 	return deck[index]
 end
 
 local function newDeck(cards)
-	local deck = {}
+	local playerDeck = {}
 
 	for index = 1, cards do
-		deck[index] = pickRandomCard()
+		playerDeck[index] = pickRandomCard()
 	end
 
-	return deck
+	return playerDeck
 end
 
-local function deckToString(deck)
+local function deckToString(playerDeck)
 	local str = {}
 
-	for index = 1, #deck - 1 do
-		str[index] = deck[index][3]
+	for index = 1, #playerDeck - 1 do
+		str[index] = playerDeck[index][3]
 	end
 
 	return string.format(
 		"**%s** and **%s**",
 		table.concat(str, "**, **"),
-		deck[#deck][3]
+		playerDeck[#playerDeck][3]
 	)
 end
 
-local function deckPoints(deck)
+local function deckPoints(playerDeck)
 	local aces, total = 0, 0
 
 	local card
-	for index = 1, #deck do
-		card = deck[index]
+	for index = 1, #playerDeck do
+		card = playerDeck[index]
 
 		if card[1] == 1 then -- ace
 			aces = aces + 1
@@ -189,9 +191,9 @@ end
 
 local function hit()
 	local card = pickRandomCard()
-	local deck = game.blackjack.decks[game.blackjack.turn]
-	deck[#deck + 1] = card
-	local points = deckPoints(deck)
+	local playerDeck = game.blackjack.decks[game.blackjack.turn]
+	playerDeck[#playerDeck + 1] = card
+	local points = deckPoints(playerDeck)
 	local is_dealer = game.blackjack.turn == game.players[1]
 
 	local content = {embed = {
