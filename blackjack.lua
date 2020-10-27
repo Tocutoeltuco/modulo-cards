@@ -1,4 +1,4 @@
-local user, game, mem, deck
+local user, game, mem, deck, api
 
 local function broadcast(content)
 	for index = 1, #game.players do
@@ -11,8 +11,6 @@ local function pickRandomCard()
 	repeat
 		index = math.random(#deck.cards)
 	until not game.blackjack.usedCards[index]
-
-	discord.reply("used card " .. index)
 
 	game.blackjack.usedCards[index] = true
 	return deck.cards[index]
@@ -222,8 +220,8 @@ local function hit()
 end
 
 return {
-	initialChecks = function(_user, _game, _mem, _deck)
-		user, game, mem, deck = _user, _game, _mem, _deck
+	initialChecks = function(_user, _game, _mem, _deck, _api)
+		user, game, mem, deck, api = _user, _game, _mem, _deck, _api
 
 		if not game.blackjack then -- not initialized
 			game.blackjack = {
