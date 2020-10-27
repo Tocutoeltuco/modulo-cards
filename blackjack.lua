@@ -199,7 +199,7 @@ local function hit()
 	}}
 
 	if points > 21 then
-		content.description = string.format(
+		content.embed.description = string.format(
 			"The %s has got more than 21 points and has been busted!",
 			is_dealer and "dealer" or "player"
 		)
@@ -210,12 +210,18 @@ local function hit()
 
 	for index = 1, 2 do
 		if (is_dealer and index == 1) or (not is_dealer and index == 2) then
-			content.description = "You got a(n) **" .. card[3] .. "**. You have **" .. points .. "** points."
+			content.embed.description = "You got a(n) **" .. card[3] .. "**. You have **" .. points .. "** points."
 		else
-			content.description = nil
+			content.embed.description = nil
 		end
 
 		discord.sendPrivateMessage(content, game.players[index])
+	end
+
+	if is_dealer then
+		setTurn(2)
+	else
+		setTurn(1)
 	end
 end
 
