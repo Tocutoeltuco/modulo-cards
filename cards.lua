@@ -148,7 +148,7 @@ else
 			discord.sendPrivateMessage({embed = {
 				title = "Join request",
 				description = ("**" .. discord.authorName .. "** (<@" .. discord.authorId .. ">) wants to join your " ..
-					mem.modules[ game.type ].name .. " game. Type **!cards accept** or **!cards deny**.")
+					mod.name .. " game. Type **!cards accept** or **!cards deny**.")
 			}}, game.players[1])
 		end
 
