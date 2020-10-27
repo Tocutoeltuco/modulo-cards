@@ -10,7 +10,7 @@ local function pickRandomCard()
 	local index
 	repeat
 		index = math.random(#deck)
-	until not game.usedCards[index]
+	until not game.blackjack.usedCards[index]
 
 	game.blackjack.usedCards[index] = true
 	return deck[index]
