@@ -248,7 +248,7 @@ return {
 		end
 
 		if cmd == "stand" or cmd == "hit" then
-			if discord.authorId == game.blackjack.turn then
+			if discord.authorId ~= game.blackjack.turn then
 				discord.reply({embed = {
 					title = "It's not your turn!",
 					description = "Please wait for your turn."
