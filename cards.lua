@@ -86,7 +86,14 @@ if not discord.message.isDM or parameters == "list" then
 elseif parameters == "help" then
 	discord.reply({embed = {
 		title = "Card Games Help",
-		description = "to-do owo"
+		description = (
+			"This command allows you to play card games with your friends. " ..
+			"The only game mode available for now is blackjack.\n\n" ..
+
+			"You can create a lobby by sending me a DM with the text **!cards create**, " ..
+			"list the available card lobbies by typing **!cards list** or " ..
+			"join a cards lobby by typing **!cards join code**."
+		)
 	}})
 	return
 end
@@ -140,42 +147,79 @@ if mem.users[ discord.authorId ] then
 				return
 			end
 
-			for index = 1, #game.players do
-				if game.players[index] == discord.authorId then
-					table.remove(game.players, index)
-					break
+			if user.ready then
+				for index = 1, #game.players do
+					if game.players[index] == discord.authorId then
+						table.remove(game.players, index)
+						break
+					end
 				end
-			end
-			mem.users[discord.authorId] = nil
+				mem.users[discord.authorId] = nil
 
-			discord.sendPrivateMessage({embed = {
-				title = "Left the game",
-				description = "You've left the game."
-			}})
+				discord.sendPrivateMessage({embed = {
+					title = "Left the game",
+					description = "You've left the game."
+				}})
 
-			local player_left = {embed = {
-				title = "Player left",
-				description = string.format(
-					"**%s** (<@%s>) has left the game.",
-					discord.authorName, discord.authorId
-				)
-			}}
-			for index = 1, #game.players do
-				discord.sendPrivateMessage(player_left, game.players[index])
+				local player_left = {embed = {
+					title = "Player left",
+					description = string.format(
+						"**%s** (<@%s>) has left the game.",
+						discord.authorName, discord.authorId
+					)
+				}}
+				for index = 1, #game.players do
+					discord.sendPrivateMessage(player_left, game.players[index])
+				end
+
+			else
+				for index = 1, #game.waiting do
+					if game.waiting[index] == discord.authorId then
+						table.remove(game.waiting, index)
+
+						if index == 1 and #game.waiting > 0 then
+							discord.sendPrivateMessage({embed = {
+								title = "Join request left",
+								description = string.format(
+									"**%s** (<@%s>) has left the waiting list.",
+									discord.authorName, discord.authorId
+								)
+							}}, game.players[1])
+
+							local waiter = game.waiting[1]
+							discord.sendPrivateMessage({embed = {
+								title = "Join request",
+								description = string.format(
+									"**%s** (<@%s>) wants to join your %s game. Type **!cards accept** or **!cards deny**.",
+									discord.getMemberName(waiter), waiter,
+									mod.name
+								)
+							}}, game.players[1])
+						end
+						break
+					end
+				end
+				mem.users[discord.authorId] = nil
+
+				discord.sendPrivateMessage({embed = {
+					title = "Left the game",
+					description = "You've left the waiting list."
+				}})
 			end
 
 		elseif is_host then
 			if cmd == "start" then
+				local script = load(mod.script)
+
 				local start_msg = {embed = {
 					title = "Starting game",
-					description = "The game is starting."
+					description = script.startDescription
 				}}
 				for index = 1, #game.players do
 					discord.sendPrivateMessage(start_msg, game.players[index])
 				end
 
 				game.started = true
-				local script = load(mod.script)
 				script.initialChecks(user, game, mem, api.decks[mod.deck], api)
 
 			elseif cmd == "accept" or cmd == "deny" then
@@ -216,7 +260,7 @@ if mem.users[ discord.authorId ] then
 					discord.sendPrivateMessage({embed = {
 						title = "Joined game",
 						description = string.format(
-							"You've joined the game `%s`. Players:\n- %s",
+							"You've joined the game `%s`. Players:\n- %s\nTo leave: **!cards leave**.",
 							game.code,
 							table.concat(player_list, "\n- ")
 						)
@@ -378,7 +422,7 @@ else
 		discord.reply({embed = {
 			title = "Join request sent",
 			description = string.format(
-				"We sent your join request to **%s**. We'll notify you when they accept or deny.",
+				"We sent your join request to **%s**. We'll notify you when they accept or deny. To leave: **!cards leave**.",
 				discord.getMemberName(game.players[1])
 			)
 		}})

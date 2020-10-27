@@ -226,6 +226,8 @@ local function hit()
 end
 
 return {
+	startDescription = "Use **!cards** to know your deck, **!cards hit** to hit or **!cards stand** to stand.",
+
 	initialChecks = function(_user, _game, _mem, _deck, _api)
 		user, game, mem, deck, api = _user, _game, _mem, _deck, _api
 
