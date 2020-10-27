@@ -155,8 +155,8 @@ local function startNewRound()
 
 			game.blackjack = nil
 			game.started = false
+			return
 		end
-		return
 	end
 
 	game.blackjack.usedCards = {}
