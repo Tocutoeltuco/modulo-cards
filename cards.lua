@@ -37,7 +37,11 @@ local function load(script)
 	if err then
 		error("Syntax error in " .. script .. ": " .. err, 2)
 	end
-	return fnc()
+	local done, result = pcall(fnc)
+	if not done then
+		error("Runtime error in " .. script .. ": " .. result, 2)
+	end
+	return result
 end
 local api = load("api.lua")
 
@@ -63,7 +67,7 @@ if not discord.message.isDM or parameters == "list" then
 			value[1] = "Nobody is playing right now."
 		end
 
-		fields[index] = {
+		fields[#fields + 1] = {
 			name = data.name,
 			value = table.concat(value, "\n")
 		}
