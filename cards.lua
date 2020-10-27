@@ -256,13 +256,13 @@ if mem.users[ discord.authorId ] then
 				end
 			
 			elseif cmd == "lock" then
-				game.private = not game.private
+				game.public = not game.public
 
 				local change = {embed = {
 					title = "Game Privacy",
 					description = string.format(
 						"The game is now `%s`.",
-						game.private and "private" or "public"
+						game.public and "public" or "private"
 					)
 				}}
 
