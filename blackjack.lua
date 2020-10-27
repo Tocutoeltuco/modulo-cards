@@ -219,9 +219,9 @@ local function hit()
 	end
 
 	if is_dealer then
-		setTurn(2)
-	else
 		setTurn(1)
+	else
+		setTurn(2)
 	end
 end
 
