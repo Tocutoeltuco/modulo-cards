@@ -177,7 +177,6 @@ if mem.users[ discord.authorId ] then
 				game.started = true
 				local script = load(mod.script)
 				script.initialChecks(user, game, mem, api.decks[mod.deck])
-				script.start()
 
 			elseif cmd == "accept" or cmd == "deny" then
 				if #game.waiting == 0 then
