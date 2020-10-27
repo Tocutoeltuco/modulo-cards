@@ -201,7 +201,7 @@ if mem.users[ discord.authorId ] then
 							"You've joined the game `%s`.",
 							game.code
 						)
-					}})
+					}}, waiter)
 
 					if players == mod.maxplayers then
 						local rejection = {embed = {
