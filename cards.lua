@@ -57,10 +57,11 @@ if not discord.message.isDM or parameters == "list" then
 			game = mem.games[ data.games[index] ]
 
 			value[index] = string.format(
-				"**%s** (`%s`, **%s/%s**)",
+				"**%s** (`%s`, **%s/%s**, %s)",
 				discord.getMemberName(game.players[1]), -- 1st player (host)
 				game.public and game.code or "private",
-				#game.players, data.maxplayers
+				#game.players, data.maxplayers,
+				game.started and "playing" or "waiting"
 			)
 		end
 
@@ -94,12 +95,200 @@ if mem.users[ discord.authorId ] then
 	local user = mem.users[ discord.authorId ]
 	local game = mem.games[ user.game ]
 	local mod = mem.modules[ game.type ]
+	local is_host = game.players[1] == discord.authorId
 
 	if game.started then
 		local script = load(mod.script)
 		script.initialChecks(user, game, mem)
 		script.command()
+
 	else
+		local cmd, args, length = api.get_command(parameters)
+
+		if cmd == "leave" then
+			if is_host then
+				local game_deleted = {embed = {
+					title = "Game deleted",
+					description = string.format(
+						"The game host (**%s** <@%s>) has left the game, so it has been deleted.",
+						discord.authorName, discord.authorId
+					)
+				}}
+
+				local player
+				for index = 1, #game.players do
+					player = game.players[index]
+					mem.users[player] = nil
+
+					discord.sendPrivateMessage(game_deleted, player)
+				end
+				for index = 1, #game.waiting do
+					player = game.waiting[index]
+					mem.users[player] = nil
+
+					discord.sendPrivateMessage(game_deleted, player)
+				end
+
+				for index = 1, #mod.games do
+					if mod.games[index] == game.code then
+						table.remove(mod.games, index)
+						break
+					end
+				end
+				mem.games[game.code] = nil
+
+				return
+			end
+
+			for index = 1, #game.players do
+				if game.players[index] == discord.authorId then
+					table.remove(game.players, index)
+					break
+				end
+			end
+			mem.users[discord.authorId] = nil
+
+			discord.sendPrivateMessage({embed = {
+				title = "Left the game",
+				description = "You've left the game."
+			}})
+
+			local player_left = {embed = {
+				title = "Player left",
+				description = string.format(
+					"**%s** (<@%s>) has left the game.",
+					discord.authorName, discord.authorId
+				)
+			}}
+			for index = 1, #game.players do
+				discord.sendPrivateMessage(player_left, game.players[index])
+			end
+
+		elseif is_host then
+			if cmd == "accept" or cmd == "deny" then
+				if #game.waiting == 0 then
+					discord.reply({embed = {
+						title = "Error!",
+						description = "Nobody is in your game's waiting list."
+					}})
+					return
+				end
+
+				local waiter = game.waiting[1]
+				table.remove(game.waiting, 1)
+
+				if cmd == "accept" then
+					local players = #game.players + 1
+
+					mem.users[waiter].ready = true
+					game.players[players] = waiter
+
+					local new_player = {embed = {
+						title = "New player",
+						description = string.format(
+							"**%s** has joined the game. **(%s/%s)**",
+							discord.getMemberName(waiter),
+							players, mod.maxplayers
+						)
+					}}
+					for index = 1, players - 1 do
+						discord.sendPrivateMessage(new_player, game.players[index])
+					end
+
+					discord.sendPrivateMessage({embed = {
+						title = "Joined game",
+						description = string.format(
+							"You've joined the game `%s`.",
+							game.code
+						)
+					}})
+
+					if players == mod.maxplayers then
+						local rejection = {embed = {
+							title = "Rejected",
+							description = string.format(
+								"The game `%s` is now full, so we removed you from the waiting list.",
+								game.code
+							)
+						}}
+
+						for index = 1, #game.waiting do
+							waiter = game.waiting[index]
+							mem.users[waiter] = nil
+
+							discord.sendPrivateMessage(rejection, waiter)
+						end
+
+						game.waiting = {}
+
+					elseif #game.waiting > 0 then
+						discord.sendPrivateMessage({embed = {
+							title = "Join request",
+							description = string.format(
+								"**%s** (<@%s>) wants to join your %s game. Type **!cards accept** or **!cards deny**.",
+								discord.getMemberName(waiter), waiter,
+								mod.name
+							)
+						}})
+					end
+
+				else
+					mem.users[waiter] = nil
+
+					discord.sendPrivateMessage({embed = {
+						title = "Rejected",
+						description = string.format(
+							"You've been rejected to join the game `%s`.",
+							game.code
+						)
+					}}, waiter)
+
+					if #game.waiting > 0 then
+						discord.sendPrivateMessage({embed = {
+							title = "Join request",
+							description = string.format(
+								"**%s** (<@%s>) wants to join your %s game. Type **!cards accept** or **!cards deny**.",
+								discord.getMemberName(waiter), waiter,
+								mod.name
+							)
+						}})
+					end
+				end
+			
+			elseif cmd == "lock" then
+				game.private = not game.private
+
+				local change = {embed = {
+					title = "Game Privacy",
+					description = string.format(
+						"The game is now `%s`.",
+						game.private and "private" or "public"
+					)
+				}}
+
+				for index = 1, #game.players do
+					discord.sendPrivateMessage(change, game.players[index])
+				end
+
+			else
+				discord.reply({embed = {
+					title = "Unknown command",
+					description = string.format(
+						"Unknown command: `%s`.\n\n**Use `!cards help` to learn more.**",
+						cmd
+					)
+				}})
+			end
+
+		else
+			discord.reply({embed = {
+				title = "Unknown command",
+				description = string.format(
+					"Unknown command: `%s`.\n\n**Use `!cards help` to learn more.**",
+					cmd
+				)
+			}})
+		end
 	end
 
 elseif not parameters then
@@ -125,7 +314,10 @@ else
 		if not game then
 			discord.reply({embed = {
 				title = "Unkown game",
-				description = "The given code (`" .. code .. "`) does not match any existent game."
+				description = string.format(
+					"The given code (`%s`) does not match any existent game.",
+					code
+				)
 			}})
 			return
 		end
@@ -147,15 +339,20 @@ else
 		if #game.waiting == 1 then
 			discord.sendPrivateMessage({embed = {
 				title = "Join request",
-				description = ("**" .. discord.authorName .. "** (<@" .. discord.authorId .. ">) wants to join your " ..
-					mod.name .. " game. Type **!cards accept** or **!cards deny**.")
+				description = string.format(
+					"**%s** (<@%s>) wants to join your %s game. Type **!cards accept** or **!cards deny**.",
+					discord.authorName, discord.authorId,
+					mod.name
+				)
 			}}, game.players[1])
 		end
 
 		discord.reply({embed = {
 			title = "Join request sent",
-			description = ("We sent your join request to **" .. discord.getMemberName(game.players[1]) ..
-				"**. We'll notify you when they accept or deny.")
+			description = string.format(
+				"We sent your join request to **%s**. We'll notify you when they accept or deny.",
+				discord.getMemberName(game.players[1])
+			)
 		}})
 
 	elseif cmd == "create" then
@@ -190,13 +387,12 @@ else
 
 		discord.reply({embed = {
 			title = "Game created",
-			description = "You've created a " .. mod.name .. " game. Code: `" .. code .. "`."
-		}})
-
-	else
-		discord.reply({embed = {
-			title = "Unknown command",
-			description = "Unknown command: `" .. cmd .. "`.\n\n**Use `!cards help` to learn more.**"
+			description = string.format(
+				"You've created a %s game. Code: `%s`.\n\n" ..
+				"Type **!cards lock** to make it public. " ..
+				"We'll notify you when someone tries to join",
+				mod.name, code
+			)
 		}})
 	end
 end
