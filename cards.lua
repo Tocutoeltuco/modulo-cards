@@ -33,7 +33,7 @@ end
 local REPO_LINK = "https://raw.githubusercontent.com/Tocutoeltuco/modulo-cards/" .. LATEST_MODULO_CARDS_COMMIT .. "/"
 local mem = CARDS_MEMORY_TABLE
 local function load(script)
-	local head, body = discord.http(REPO_LINK .. "api.lua")
+	local head, body = discord.http(REPO_LINK .. script)
 	local fnc, err = discord.load(body)
 	if err then
 		error("Syntax error in " .. script .. ": " .. err, 2)
@@ -99,7 +99,6 @@ if mem.users[ discord.authorId ] then
 
 	if game.started then
 		local script = load(mod.script)
-		error(json.encode(script))
 		script.initialChecks(user, game, mem, api.decks[mod.deck])
 		script.command()
 
