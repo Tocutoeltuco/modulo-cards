@@ -38,6 +38,10 @@ do
 				}
 			end
 
+			if not content.embed.color then
+				content.embed.color = 0x665bf7
+			end
+
 			if content.embed.description and #content.embed.description > 2000 then
 				for id, slice in next, split_text(content.embed.description, 2000, true) do
 					content.embed.description = slice
