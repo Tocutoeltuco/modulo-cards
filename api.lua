@@ -39,7 +39,9 @@ end
 
 do
 	local reply = discord.reply
-	function discord.reply(content)
+	local privateMessage = discord.sendPrivateMessage
+
+	local function sendContent(fnc, content, arg1)
 		if type(content) == "table" and content.embed then
 			-- UTC (!), year-month-dayThour:minute:secondZ
 			content.embed.timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")
@@ -58,18 +60,26 @@ do
 			if content.embed.description and #content.embed.description > 2000 then
 				for id, slice in next, split_text(content.embed.description, 2000, true) do
 					content.embed.description = slice
-					reply(content)
+					fnc(content, arg1)
 				end
 			else
-				reply(content)
+				fnc(content, arg1)
 			end
 		elseif type(content) == "string" and #content > 2000 then
 			for id, slice in next, split_text(content, 2000, true) do
-				reply(slice)
+				fnc(slice, arg1)
 			end
 		else
-			reply(content)
+			fnc(content, arg1)
 		end
+	end
+
+	function discord.reply(content)
+		return sendContent(reply, content)
+	end
+
+	function discord.sendPrivateMessage(content, target)
+		return sendContent(privateMessage, content, target)
 	end
 end
 
