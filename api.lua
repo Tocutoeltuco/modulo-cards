@@ -35,6 +35,8 @@ local function get_command(text)
 			args[pointer] = slice
 		end
 	end
+
+	return cmd, args, pointer
 end
 
 do
