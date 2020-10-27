@@ -76,7 +76,7 @@ if not discord.message.isDM or parameters == "list" then
 
 	discord.reply({embed = {
 		title = "Game List",
-		description = "This is the list of available card games.\n\n**DM me `!cards help` to learn more.**"
+		description = "This is the list of available card games.\n\n**DM me `!cards help` to learn more.**",
 
 		fields = fields
 	}})
